@@ -3,85 +3,128 @@ export class Player {
     this.name = name;
     this.role = role;
 
-    // 10 traits (0–100)
+    // 🎯 hidden growth system (important for long-term gameplay)
+    this.age = randInt(18, 35);
+    this.potential = randInt(60, 95); // max ceiling
+    this.experience = 0;
+
+    // 📉 form system (-0.2 to +0.2 impact)
+    this.form = 0;
+
+    // 🧠 10 core traits (0–100)
     this.traits = {
-      timing: rand(),
-      shotSelection: rand(),
-      powerHitting: rand(),
-      footwork: rand(),
-      temperament: rand(),
+      // batting
+      timing: randTrait(),
+      shotSelection: randTrait(),
+      powerHitting: randTrait(),
+      footwork: randTrait(),
+      temperament: randTrait(),
 
-      accuracy: rand(),
-      variation: rand(),
-      control: rand(),
-      swing: rand(),
-      stamina: rand()
+      // bowling
+      accuracy: randTrait(),
+      variation: randTrait(),
+      control: randTrait(),
+      swing: randTrait(),
+      stamina: randTrait()
     };
-
-    this.form = 1;
   }
 
-  // MAIN BATTING ABILITY (0–100)
+  // 🏏 BATSMAN RATING
   getBattingAbility() {
     const t = this.traits;
 
-    const batting =
+    let rating =
       (t.timing * 0.25 +
-       t.shotSelection * 0.25 +
+       t.shotSelection * 0.2 +
        t.powerHitting * 0.2 +
        t.footwork * 0.15 +
-       t.temperament * 0.15);
+       t.temperament * 0.2);
 
-    return clamp(batting * this.form);
+    rating *= this.getRoleMultiplier("batting");
+    rating += this.form;
+
+    return this.applyCeiling(clamp(rating));
   }
 
-getBattingAbility() {
-  const t = this.traits;
+  // 🎯 BOWLER RATING
+  getBowlingAbility() {
+    const t = this.traits;
 
-  let batting =
-    (t.timing * 0.25 +
-     t.shotSelection * 0.25 +
-     t.powerHitting * 0.2 +
-     t.footwork * 0.15 +
-     t.temperament * 0.15);
+    let rating =
+      (t.accuracy * 0.25 +
+       t.variation * 0.2 +
+       t.control * 0.2 +
+       t.swing * 0.2 +
+       t.stamina * 0.15);
 
-  batting *= this.form;
-  batting *= this.getRoleMultiplier("batting");
+    rating *= this.getRoleMultiplier("bowling");
+    rating += this.form;
 
-  return clamp(batting);
-}
+    return this.applyCeiling(clamp(rating));
+  }
 
-  // OVERALL RATING
+  // ⭐ OVERALL RATING (weighted)
   getOverall() {
-    return Math.round(
-      (this.getBattingAbility() + this.getBowlingAbility()) / 2
-    );
+    const bat = this.getBattingAbility();
+    const bowl = this.getBowlingAbility();
+
+    // role bias
+    if (this.role === "batsman") return Math.round(bat * 0.7 + bowl * 0.3);
+    if (this.role === "bowler") return Math.round(bowl * 0.7 + bat * 0.3);
+    if (this.role === "keeper") return Math.round(bat * 0.6 + bowl * 0.4);
+
+    return Math.round((bat + bowl) / 2);
+  }
+
+  // 🧩 ROLE SYSTEM
+  getRoleMultiplier(type) {
+    if (this.role === "batsman" && type === "batting") return 1.12;
+    if (this.role === "bowler" && type === "bowling") return 1.12;
+    if (this.role === "allrounder") return 1.05;
+    if (this.role === "keeper") return 1.03;
+    return 1;
+  }
+
+  // 📈 EXPERIENCE SYSTEM (future-proof)
+  gainExperience(points) {
+    this.experience += points;
+
+    // small trait growth chance
+    if (Math.random() < 0.3) {
+      const keys = Object.keys(this.traits);
+      const randomTrait = keys[Math.floor(Math.random() * keys.length)];
+
+      this.traits[randomTrait] = clamp(this.traits[randomTrait] + randInt(0, 2));
+    }
+  }
+
+  // 📉 aging decay system (important realism)
+  applyAgeDecay() {
+    if (this.age > 30) {
+      const decay = (this.age - 30) * 0.5;
+
+      for (let key in this.traits) {
+        this.traits[key] = clamp(this.traits[key] - decay * 0.1);
+      }
+    }
+  }
+
+  // 🧠 ceiling based on potential
+  applyCeiling(value) {
+    return Math.min(value, this.potential);
   }
 }
 
-// helpers
-function rand() {
-  return Math.floor(40 + Math.random() * 40);
+// ---------------- HELPERS ----------------
+
+function randTrait() {
+  return randInt(35, 80);
+}
+
+function randInt(min, max) {
+  return Math.floor(min + Math.random() * (max - min));
 }
 
 function clamp(v) {
   return Math.max(0, Math.min(100, v));
 }
-
-
-getRoleMultiplier(type) {
-  if (this.role === "batsman" && type === "batting") return 1.1;
-  if (this.role === "bowler" && type === "bowling") return 1.1;
-  if (this.role === "allrounder") return 1.05;
-  return 1;
-}
-
-
-  
-
-
-
-
-
-
-
