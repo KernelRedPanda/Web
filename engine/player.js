@@ -128,3 +128,9 @@ function randInt(min, max) {
 function clamp(v) {
   return Math.max(0, Math.min(100, v));
 }
+
+this.id = crypto.randomUUID();
+
+
+
+
