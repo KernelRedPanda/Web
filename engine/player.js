@@ -35,19 +35,21 @@ export class Player {
     return clamp(batting * this.form);
   }
 
-  // MAIN BOWLING ABILITY (0–100)
-  getBowlingAbility() {
-    const t = this.traits;
+getBattingAbility() {
+  const t = this.traits;
 
-    const bowling =
-      (t.accuracy * 0.25 +
-       t.variation * 0.2 +
-       t.control * 0.2 +
-       t.swing * 0.2 +
-       t.stamina * 0.15);
+  let batting =
+    (t.timing * 0.25 +
+     t.shotSelection * 0.25 +
+     t.powerHitting * 0.2 +
+     t.footwork * 0.15 +
+     t.temperament * 0.15);
 
-    return clamp(bowling * this.form);
-  }
+  batting *= this.form;
+  batting *= this.getRoleMultiplier("batting");
+
+  return clamp(batting);
+}
 
   // OVERALL RATING
   getOverall() {
@@ -65,3 +67,21 @@ function rand() {
 function clamp(v) {
   return Math.max(0, Math.min(100, v));
 }
+
+
+getRoleMultiplier(type) {
+  if (this.role === "batsman" && type === "batting") return 1.1;
+  if (this.role === "bowler" && type === "bowling") return 1.1;
+  if (this.role === "allrounder") return 1.05;
+  return 1;
+}
+
+
+  
+
+
+
+
+
+
+
